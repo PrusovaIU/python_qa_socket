@@ -30,7 +30,7 @@ class _HTTPServerSocket:
 
     def get_connection(self) -> (socket.socket, Tuple[str, int]):
         client, client_address = self.__socket.accept()
-        self.__logger.info(f"New client: {client_address}")
+        self.__logger.info(f"Request from: {client_address}")
         return client, client_address
 
 
@@ -48,11 +48,10 @@ class HTTPServer:
         client_socket, client_address = server_socket.get_connection()
         try:
             with client_socket:
-                data: Optional[bytes] = None
-                while data is None or len(data) > 0:
-                    data = client_socket.recv(1024)
+                data = client_socket.recv(1024)
+                if data:
                     answer = self.__handle_data_from_client(data, client_address)
-                    client_socket.send(answer)
+                    client_socket.sendall(answer)
         except OSError as err:
             self.__logger.error(f"Client {client_address} error: {err}")
         finally:
@@ -69,7 +68,7 @@ class HTTPServer:
             status = request_data[self.__STATUS]
             headers = request_data[self.__HEADERS]
             status_code, status_phrase = status
-            answer = f"Method {method}{headers}"
+            answer = f"Method: {method}{headers}"
             self.__logger.info(f"Request Method: {method}\n"
                                f"Request Source: {client}\n"
                                f"Response Status: {status_code} {status_phrase}\n"
@@ -99,7 +98,7 @@ class HTTPServer:
             method = data_match[1]
             path = data_match[2]
             headers = data_match[3]
-            status_match = match(r"status=(\S{3})", path)
+            status_match = match(r"\?status=(\S{3})", path)
             if status_match is not None:
                 status_code = int(status_match[1])
                 status_phrase = http_client.responses[status_code]
