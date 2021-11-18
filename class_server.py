@@ -76,7 +76,7 @@ class HTTPServer:
         except _ParseError as err:
             self.__logger.error(f"Parse request error: {err}")
         finally:
-            answer = f"HTTP/{self.HTTP_VER} {status_code} {status_phrase}\n{answer}"
+            answer = f"HTTP/{self.HTTP_VER} {status_code} {status_phrase}\n\n{answer}"
         return answer.encode()
 
     @classmethod
